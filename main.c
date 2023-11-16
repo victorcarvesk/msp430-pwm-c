@@ -31,7 +31,7 @@ void main(void)
 	P3OUT = 0x00;               // Turn  PORT3
 
 	P1DIR |= SERVO;             // Pino de controle do servomotor
-	P1SEL |= SERVO;             // define pino como modo especial (conecta ao Timer A)
+	P1SEL |= SERVO;             // define pino como modo especial (conecta ao Timer A, Captura/Comparação canal 1)
 
 	P1DIR &= ~DIR_BTN;           // Define pino 3 do PORT1 como entrada (P1.3 = 0)
 	P1REN |= DIR_BTN;            // Habilita resistor de tra��o (pull) do P1.3
@@ -52,7 +52,6 @@ void main(void)
 	TACCR1 = DEG_MIN;                               // Set TA0.1 PWM duty cycle
 
 	TACCTL1 = OUTMOD_7;                   // Set TA0.1 Waveform Mode - Clear on Compare, Set on Overflow
-	//TACCTL0 = CCIE;
 
 	TACTL = TASSEL_2 + MC_1 + ID_0;                // Timer Clock -> SMCLK, Mode -> Up Count
 
@@ -76,15 +75,11 @@ void main(void)
 
 }
 
-#pragma vector=TIMER0_A0_VECTOR
-__interrupt void something(void)
-{
-}
-
 #pragma vector=PORT1_VECTOR
 __interrupt void change_dir(void)
 {
-    if(P1IFG & DIR_BTN)                  // Verifica se o botão no pino P1.3 está pressionado
+    // Altera direção
+    if(P1IFG & DIR_BTN)
     {
         if(increment == 1)
         {
@@ -94,10 +89,11 @@ __interrupt void change_dir(void)
         {
             increment = 1;
         }
-        P1IFG &= ~DIR_BTN;               // Limpa flag do Button
+        P1IFG &= ~DIR_BTN;
     }
 
-    if(P1IFG & DELAY_BTN)                  // Verifica se o botão no pino P1.3 está pressionado
+    // Altera delay
+    if(P1IFG & DELAY_BTN)
     {
         delay += interval;
         if(delay >= DELAY_MAX)
@@ -108,6 +104,6 @@ __interrupt void change_dir(void)
         {
             interval = 500;
         }
-        P1IFG &= ~DELAY_BTN;               // Limpa flag do Button
+        P1IFG &= ~DELAY_BTN;
     }
 }
